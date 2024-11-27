@@ -13,7 +13,17 @@
             --text-glow: #4a9eff;
             --shadow: #4a9eff;
             --amount-color: #00ffff;
+            --error-color: #ff4a4a;
+            --success-color: #4aff4a;
             --p: clamp(8px, 2vw, 12px);
+            --exp-current: #4aff4a;    
+            --exp-next: #ffd700;       
+            --exp-total: #ff7f50;      
+            --exp-remaining: #ff4a4a;  
+            --exp3: #ff69b4;      /* 3開 */
+            --exp2: #ba55d3;      /* 2開 */
+            --exp1: #20b2aa;      /* 1開 */
+            --exp0: #daa520;      /* 0開 */
         }
         
         * {
@@ -38,6 +48,12 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: var(--p);
+            box-shadow: 0 0 20px rgba(74, 158, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .app:hover {
+            box-shadow: 0 0 30px rgba(74, 158, 255, 0.3);
         }
 
         .title {
@@ -51,6 +67,18 @@
                          0 0 20px var(--text-glow),
                          0 0 30px var(--text-glow);
             letter-spacing: 1px;
+            position: relative;
+        }
+
+        .title::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--text-glow), transparent);
         }
 
         label {
@@ -60,6 +88,11 @@
             margin-bottom: 0.5rem;
             text-shadow: 0 0 5px var(--text-glow);
             letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        label:hover {
+            text-shadow: 0 0 8px var(--text-glow);
         }
 
         select {
@@ -72,6 +105,13 @@
             font-size: 1rem;
             font-weight: 500;
             text-shadow: 0 0 5px var(--text-glow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        select:not(:disabled):hover {
+            border-color: var(--text-glow);
+            box-shadow: 0 0 10px rgba(74, 158, 255, 0.2);
         }
 
         select option {
@@ -87,15 +127,33 @@
             padding: var(--p);
             border-radius: 4px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
             font-weight: 600;
             text-shadow: 0 0 5px var(--text-glow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stage-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(74, 158, 255, 0.1), transparent);
+            transition: 0.5s;
+        }
+
+        .stage-button:hover::before {
+            left: 100%;
         }
 
         .stage-button:hover {
             background: rgba(0,0,0,.3);
             text-shadow: 0 0 10px var(--text-glow);
             border-color: var(--text-glow);
+            transform: translateY(-2px);
         }
 
         .stage-button.active {
@@ -103,10 +161,6 @@
             border-color: var(--shadow);
             text-shadow: 0 0 10px var(--text-glow),
                          0 0 20px var(--text-glow);
-        }
-
-        .stage-number {
-            font-weight: 700;
         }
 
         .material-item {
@@ -120,32 +174,174 @@
             border-bottom: 1px solid rgba(255,255,255,0.1);
             font-weight: 600;
             text-shadow: 0 0 5px var(--text-glow);
+            transition: all 0.3s ease;
+        }
+
+        .material-item:hover {
+            background: rgba(74, 158, 255, 0.1);
+            padding-left: var(--p);
+            padding-right: var(--p);
+            border-radius: 4px;
         }
 
         .material-amount {
             font-weight: 800;
             color: var(--amount-color);
-            text-shadow: 0 0 10px var(--amount-color),
-                        0 0 20px var(--amount-color),
-                        0 0 30px var(--amount-color);
+            text-shadow: 0 0 10px var(--amount-color);
             padding: 2px 8px;
             border-radius: 4px;
             background: rgba(0, 255, 255, 0.1);
             border: 1px solid rgba(0, 255, 255, 0.3);
             font-size: 1.1rem;
-            animation: glowing 1.5s ease-in-out infinite alternate;
+            transition: all 0.3s ease;
         }
 
-        @keyframes glowing {
-            from {
-                text-shadow: 0 0 10px var(--amount-color),
-                            0 0 20px var(--amount-color);
-            }
-            to {
-                text-shadow: 0 0 15px var(--amount-color),
-                            0 0 25px var(--amount-color),
-                            0 0 35px var(--amount-color);
-            }
+        .material-amount:hover {
+            transform: scale(1.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--primary);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            min-width: 300px;
+            box-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            text-shadow: 0 0 10px var(--text-glow);
+        }
+
+        .exp-info {
+            margin-bottom: 1rem;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .close-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .exp-calculate-btn {
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+            width: 100%;
+            font-weight: 600;
+            text-shadow: 0 0 5px var(--text-glow);
+        }
+
+        .exp-calculate-btn:hover {
+            background: rgba(74, 158, 255, 0.3);
+            border-color: var(--text-glow);
+        }
+
+        .exp-current {
+            color: var(--exp-current);
+            text-shadow: 0 0 10px var(--exp-current),
+                         0 0 20px var(--exp-current);
+        }
+
+        .exp-next {
+            color: var(--exp-next);
+            text-shadow: 0 0 10px var(--exp-next),
+                         0 0 20px var(--exp-next);
+        }
+
+        .exp-total {
+            color: var(--exp-total);
+            text-shadow: 0 0 10px var(--exp-total),
+                         0 0 20px var(--exp-total);
+        }
+
+        .exp-remaining {
+            color: var(--exp-remaining);
+            text-shadow: 0 0 10px var(--exp-remaining),
+                         0 0 20px var(--exp-remaining);
+        }
+
+        /* 新增的自訂義經驗值樣式 */
+        .exp-custom-input {
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            border-radius: 6px;
+            background: rgba(0,0,0,.2);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .exp-custom-input:hover {
+            box-shadow: 0 0 10px rgba(74, 158, 255, 0.2);
+        }
+
+        .exp-3 { border-color: var(--exp3); }
+        .exp-2 { border-color: var(--exp2); }
+        .exp-1 { border-color: var(--exp1); }
+        .exp-0 { border-color: var(--exp0); }
+
+        .exp-custom-input label {
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .exp-custom-input input {
+            width: 100%;
+            background: rgba(0,0,0,.3);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .exp-custom-input input:focus {
+            outline: none;
+            border-color: var(--shadow);
+            box-shadow: 0 0 5px var(--shadow);
         }
 
         .flex { display: flex; gap: var(--p); }
@@ -182,6 +378,12 @@
             padding: var(--p);
             margin-top: var(--p);
             border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .materials-container:hover {
+            border-color: var(--text-glow);
+            box-shadow: 0 0 15px rgba(74, 158, 255, 0.2);
         }
 
         .material-dot {
@@ -192,6 +394,52 @@
             margin-right: 0.5rem;
             box-shadow: 0 0 5px var(--amount-color),
                        0 0 10px var(--amount-color);
+            transition: all 0.3s ease;
+        }
+
+        .material-item:hover .material-dot {
+            transform: scale(1.2);
+        }
+
+        .loading {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: var(--p);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(74, 158, 255, 0.1);
+            border-left-color: var(--text-glow);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            text-align: center;
+            padding: var(--p);
+            background: rgba(255, 74, 74, 0.1);
+            border-radius: 4px;
+            margin-top: var(--p);
+            display: none;
+        }
+
+        .exp-input {
+            background: rgba(0,0,0,.3);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 1rem;
+            margin-bottom: var(--p);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         @keyframes slideIn {
@@ -203,6 +451,7 @@
 
         @media (max-width: 400px) {
             .flex { flex-direction: column; }
+            ```css
             .stages-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
@@ -234,9 +483,38 @@
                 <div class="stages-grid" id="stageButtons"></div>
             </div>
 
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
             <div id="materialsContainer" style="display: none;">
                 <label id="materialsTitle">所需材料</label>
                 <div class="materials-container" id="materialsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="expModal">
+        <div class="modal-content">
+            <button class="close-button" onclick="closeExpModal()">×</button>
+            <div class="modal-title">經驗值計算結果</div>
+            <div class="exp-info material-item">
+                <span>當前等級所需總經驗</span>
+                <span class="material-amount exp-current" id="currentLevelTotal">0</span>
+            </div>
+            <div class="exp-info material-item">
+                <span>下一等級</span>
+                <span class="material-amount exp-next" id="nextLevel">0</span>
+            </div>
+            <div class="exp-info material-item">
+                <span>下一等級所需總經驗</span>
+                <span class="material-amount exp-total" id="nextLevelTotal">0</span>
+            </div>
+            <div class="exp-info material-item">
+                <span>還需要經驗值</span>
+                <span class="material-amount exp-remaining" id="remaining">0</span>
             </div>
         </div>
     </div>
@@ -255,18 +533,78 @@
             { stage: 8, levels: "36~40" },
             { stage: 9, levels: "41~45" }
         ];
-		
+
+        const expRequirements = {
+            "B": {
+                1: 70, 2: 80, 3: 90, 4: 100, 5: 120, 6: 140, 7: 160, 8: 190, 9: 220, 10: 260,
+                11: 300, 12: 350, 13: 400, 14: 500, 15: 600, 16: 700, 17: 800, 18: 900, 19: 1000, 20: 1200,
+                21: 1400, 22: 1600, 23: 1900, 24: 2200, 25: 2600, 26: 3000, 27: 3500, 28: 4100, 29: 4800, 30: 5600,
+                31: 6500, 32: 7500, 33: 8700, 34: 10100, 35: 11700, 36: 13600, 37: 15800, 38: 18300, 39: 21000, 40: 24000,
+                41: 27000, 42: 32000, 43: 37000, 44: 43000, 45: 50000, 46: 58000, 47: 67000, 48: 78000, 49: 90000
+            },
+            "A": {
+                1: 120, 2: 140, 3: 170, 4: 200, 5: 240, 6: 290, 7: 350, 8: 420, 9: 500, 10: 600,
+                11: 720, 12: 860, 13: 1000, 14: 1200, 15: 1400, 16: 1700, 17: 2000, 18: 2400, 19: 2900, 20: 3500,
+                21: 4200, 22: 5000, 23: 6000, 24: 7200, 25: 8600, 26: 10300, 27: 12400, 28: 14900, 29: 17900, 30: 21500,
+                31: 25800, 32: 31000, 33: 37200, 34: 44600, 35: 53500, 36: 64200, 37: 77000, 38: 92400, 39: 111000, 40: 133000,
+                41: 160000, 42: 192000, 43: 230000, 44: 276000, 45: 331000, 46: 397000, 47: 476000, 48: 571000, 49: 685000
+            },
+            "S": {
+                1: 200, 2: 250, 3: 300, 4: 350, 5: 710, 6: 1017, 7: 1303, 8: 1575, 9: 1841, 10: 3509,
+                11: 3962, 12: 4438, 13: 4948, 14: 5504, 15: 9477, 16: 17427, 17: 21606, 18: 24048, 19: 26786, 20: 29853,
+                21: 36282, 22: 39105, 23: 43357, 24: 46069, 25: 51275, 26: 57008, 27: 63301, 28: 68186, 29: 71697, 30: 74867,
+                31: 84728, 32: 94314, 33: 104658, 34: 122792, 35: 137749, 36: 163000, 37: 195500, 38: 227000, 39: 275000, 40: 325000,
+                41: 390000, 42: 470000, 43: 560000, 44: 650000, 45: 740000, 46: 830000, 47: 940000, 48: 1040000, 49: 1150000
+            }
+        };
+
+        // 自訂義經驗值
+        const customExpValues = {
+            "3開": 58327,
+            "2開": 7837,
+            "1開": 397,
+            "0開": 150
+        };
+
+        function showLoading() {
+            document.querySelector('.loading').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.querySelector('.loading').style.display = 'none';
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            setTimeout(() => {
+                errorElement.style.opacity = '0';
+                setTimeout(() => {
+                    errorElement.style.display = 'none';
+                    errorElement.style.opacity = '1';
+                }, 300);
+            }, 3000);
+        }
+
+        function showExpModal() {
+            document.getElementById('expModal').style.display = 'block';
+        }
+
+        function closeExpModal() {
+            document.getElementById('expModal').style.display = 'none';
+        }
+
         // 網頁加載事件
         window.onload = async function() {
+            showLoading();
             try {
-                // 獲得武器數據
                 const response = await fetch("./weapon_data.json");
                 if (!response.ok) {
                     throw new Error("資料獲取失敗！");
                 }
                 materials = await response.json();
 
-                // 初始化 武器分類選項
                 const selectElement = document.getElementById("weaponType");
                 Object.keys(materials).forEach(function(weaponType) {
                     const option = document.createElement("option");
@@ -275,7 +613,9 @@
                     selectElement.appendChild(option);
                 });
             } catch (error) {
-                alert("獲取武器資料失敗, 請重新整理網頁。");
+                showError("獲取武器資料失敗，請重新整理網頁。");
+            } finally {
+                hideLoading();
             }
         };
 
@@ -294,6 +634,13 @@
                 hideStagesAndMaterials();
             }
         });
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('expModal');
+            if (event.target == modal) {
+                closeExpModal();
+            }
+        }
 
         function showStages() {
             const stagesContainer = document.getElementById('stagesContainer');
@@ -333,6 +680,40 @@
                 materialsTitle.textContent = `${weaponType} ${rank}級 所需材料 (階段 ${currentStage} - ${stagesConfig[currentStage-1].levels}等)`;
                 
                 materialsList.innerHTML = '';
+
+                // Add exp calculation section with custom exp inputs
+                const expDiv = document.createElement('div');
+                expDiv.className = 'exp-calculation';
+                expDiv.innerHTML = `
+                    <div class="form-group">
+                        <label>目前等級 (1-49)</label>
+                        <input type="number" id="currentLevel" class="exp-input" min="1" max="49" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>目前經驗值</label>
+                        <input type="number" id="currentExp" class="exp-input" min="0" value="">
+                    </div>
+                    <div class="exp-custom-input exp-3">
+                        <label>3開數量 (58,327經驗/個)</label>
+                        <input type="number" id="exp3" min="0" value="0">
+                    </div>
+                    <div class="exp-custom-input exp-2">
+                        <label>2開數量 (7,837經驗/個)</label>
+                        <input type="number" id="exp2" min="0" value="0">
+                    </div>
+                    <div class="exp-custom-input exp-1">
+                        <label>1開數量 (397經驗/個)</label>
+                        <input type="number" id="exp1" min="0" value="0">
+                    </div>
+                    <div class="exp-custom-input exp-0">
+                        <label>0開數量 (150經驗/個)</label>
+                        <input type="number" id="exp0" min="0" value="0">
+                    </div>
+                    <button class="exp-calculate-btn" id="calculateExp">計算經驗值</button>
+                `;
+                materialsList.appendChild(expDiv);
+
+                // Add material items
                 currentMaterials.forEach((material, index) => {
                     const div = document.createElement('div');
                     div.className = 'material-item';
@@ -346,6 +727,67 @@
                     `;
                     materialsList.appendChild(div);
                 });
+
+                // Setup exp calculation
+                document.getElementById('calculateExp').addEventListener('click', function() {
+                    const levelInput = document.getElementById('currentLevel');
+                    const expInput = document.getElementById('currentExp');
+                    const exp3Input = document.getElementById('exp3');
+                    const exp2Input = document.getElementById('exp2');
+                    const exp1Input = document.getElementById('exp1');
+                    const exp0Input = document.getElementById('exp0');
+
+                    const currentLevel = parseInt(levelInput.value);
+                    let currentExp = parseInt(expInput.value) || 0;
+                    
+                    const exp3Count = parseInt(exp3Input.value) || 0;
+                    const exp2Count = parseInt(exp2Input.value) || 0;
+                    const exp1Count = parseInt(exp1Input.value) || 0;
+                    const exp0Count = parseInt(exp0Input.value) || 0;
+
+                    if (!currentLevel) {
+                        showError('請輸入正確的等級');
+                        return;
+                    }
+
+                    if (currentLevel >= 49) {
+                        showError('已達到最高等級');
+                        return;
+                    }
+
+                    // 計算總經驗值
+                    const totalCustomExp = 
+                        (exp3Count * customExpValues["3開"]) +
+                        (exp2Count * customExpValues["2開"]) +
+                        (exp1Count * customExpValues["1開"]) +
+                        (exp0Count * customExpValues["0開"]);
+
+                    currentExp += totalCustomExp;
+
+                    const nextLevelTotal = expRequirements[rank][currentLevel + 1];
+                    const currentLevelTotal = expRequirements[rank][currentLevel];
+                    const remaining = nextLevelTotal - currentExp;
+
+                    document.getElementById('currentLevelTotal').textContent = currentLevelTotal.toLocaleString();
+                    document.getElementById('nextLevel').textContent = currentLevel + 1;
+                    document.getElementById('nextLevelTotal').textContent = nextLevelTotal.toLocaleString();
+                    document.getElementById('remaining').textContent = (remaining > 0 ? remaining : 0).toLocaleString();
+
+                    // 更新模態框標題
+                    const modalTitle = document.querySelector('.modal-title');
+                    if (totalCustomExp > 0) {
+                        let expDetails = [];
+                        if (exp3Count > 0) expDetails.push(`3開x${exp3Count}`);
+                        if (exp2Count > 0) expDetails.push(`2開x${exp2Count}`);
+                        if (exp1Count > 0) expDetails.push(`1開x${exp1Count}`);
+                        if (exp0Count > 0) expDetails.push(`0開x${exp0Count}`);
+                        modalTitle.textContent = `經驗值計算結果 (${expDetails.join(', ')}: +${totalCustomExp.toLocaleString()})`;
+                    } else {
+                        modalTitle.textContent = '經驗值計算結果';
+                    }
+
+                    showExpModal();
+                });
             }
         }
 
@@ -356,4 +798,4 @@
         }
     </script>
 </body>
-</html>
+</html>                        
