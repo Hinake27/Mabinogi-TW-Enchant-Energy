@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>武器製作材料選擇器</title>
+    <style>
+        :root {
+            --primary: #1c4565;
+            --border: #436279;
+            --bg: #1a1a1a;
+            --text: #fff;
+            --text-glow: #4a9eff;
+            --shadow: #4a9eff;
+            --amount-color: #00ffff;
+            --p: clamp(8px, 2vw, 12px);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, sans-serif;
+            display: grid;
+            place-items: center;
+            padding: var(--p);
+        }
+
+        .app {
+            width: min(600px, 95vw);
+            background: var(--primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: var(--p);
+        }
+
+        .title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: var(--p);
+            text-align: center;
+            padding: var(--p);
+            border-bottom: 1px solid var(--border);
+            text-shadow: 0 0 10px var(--text-glow),
+                         0 0 20px var(--text-glow),
+                         0 0 30px var(--text-glow);
+            letter-spacing: 1px;
+        }
+
+        label {
+            display: block;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 5px var(--text-glow);
+            letter-spacing: 0.5px;
+        }
+
+        select {
+            background: rgba(0,0,0,.3);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 500;
+            text-shadow: 0 0 5px var(--text-glow);
+        }
+
+        select option {
+            background: var(--primary);
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .stage-button {
+            background: rgba(0,0,0,.2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: var(--p);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            text-shadow: 0 0 5px var(--text-glow);
+        }
+
+        .stage-button:hover {
+            background: rgba(0,0,0,.3);
+            text-shadow: 0 0 10px var(--text-glow);
+            border-color: var(--text-glow);
+        }
+
+        .stage-button.active {
+            background: var(--shadow);
+            border-color: var(--shadow);
+            text-shadow: 0 0 10px var(--text-glow),
+                         0 0 20px var(--text-glow);
+        }
+
+        .stage-number {
+            font-weight: 700;
+        }
+
+        .material-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--p) 0;
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateX(1rem);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-weight: 600;
+            text-shadow: 0 0 5px var(--text-glow);
+        }
+
+        .material-amount {
+            font-weight: 800;
+            color: var(--amount-color);
+            text-shadow: 0 0 10px var(--amount-color),
+                        0 0 20px var(--amount-color),
+                        0 0 30px var(--amount-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            font-size: 1.1rem;
+            animation: glowing 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glowing {
+            from {
+                text-shadow: 0 0 10px var(--amount-color),
+                            0 0 20px var(--amount-color);
+            }
+            to {
+                text-shadow: 0 0 15px var(--amount-color),
+                            0 0 25px var(--amount-color),
+                            0 0 35px var(--amount-color);
+            }
+        }
+
+        .flex { display: flex; gap: var(--p); }
+        .grid { display: grid; gap: var(--p); }
+        .form-group { margin-bottom: var(--p); }
+        
+        select:focus {
+            outline: none;
+            border-color: var(--shadow);
+            box-shadow: 0 0 5px var(--shadow);
+        }
+
+        select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: var(--p);
+            margin-top: var(--p);
+        }
+
+        .stage-levels {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .materials-container {
+            background: rgba(0,0,0,.2);
+            border-radius: 4px;
+            padding: var(--p);
+            margin-top: var(--p);
+            border: 1px solid var(--border);
+        }
+
+        .material-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--amount-color);
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            box-shadow: 0 0 5px var(--amount-color),
+                       0 0 10px var(--amount-color);
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 400px) {
+            .flex { flex-direction: column; }
+            .stages-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <h1 class="title">武器製作材料選擇器</h1>
+        
+        <div class="grid">
+            <div class="form-group">
+                <label>武器分類</label>
+                <select id="weaponType">
+                    <option value="">請選擇武器類型</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>階級</label>
+                <select id="rank" disabled>
+                    <option value="">請選擇階級</option>
+                    <option value="S">S 級</option>
+                    <option value="A">A 級</option>
+                    <option value="B">B 級</option>
+                </select>
+            </div>
+
+            <div id="stagesContainer" class="form-group" style="display: none;">
+                <label>階段</label>
+                <div class="stages-grid" id="stageButtons"></div>
+            </div>
+
+            <div id="materialsContainer" style="display: none;">
+                <label id="materialsTitle">所需材料</label>
+                <div class="materials-container" id="materialsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let materials = {};
+        let currentStage = 1;
+        const stagesConfig = [
+            { stage: 1, levels: "0~5" },
+            { stage: 2, levels: "6~10" },
+            { stage: 3, levels: "11~15" },
+            { stage: 4, levels: "16~20" },
+            { stage: 5, levels: "21~25" },
+            { stage: 6, levels: "26~30" },
+            { stage: 7, levels: "31~35" },
+            { stage: 8, levels: "36~40" },
+            { stage: 9, levels: "41~45" }
+        ];
+		
+        // 網頁加載事件
+        window.onload = async function() {
+            try {
+                // 獲得武器數據
+                const response = await fetch("./weapon_data.json");
+                if (!response.ok) {
+                    throw new Error("資料獲取失敗！");
+                }
+                materials = await response.json();
+
+                // 初始化 武器分類選項
+                const selectElement = document.getElementById("weaponType");
+                Object.keys(materials).forEach(function(weaponType) {
+                    const option = document.createElement("option");
+                    option.value = weaponType;
+                    option.textContent = weaponType;
+                    selectElement.appendChild(option);
+                });
+            } catch (error) {
+                alert("獲取武器資料失敗, 請重新整理網頁。");
+            }
+        };
+
+        document.getElementById('weaponType').addEventListener('change', function(e) {
+            const rankSelect = document.getElementById('rank');
+            rankSelect.disabled = !e.target.value;
+            rankSelect.value = '';
+            hideStagesAndMaterials();
+        });
+
+        document.getElementById('rank').addEventListener('change', function(e) {
+            if (e.target.value) {
+                showStages();
+                updateMaterials();
+            } else {
+                hideStagesAndMaterials();
+            }
+        });
+
+        function showStages() {
+            const stagesContainer = document.getElementById('stagesContainer');
+            const stageButtons = document.getElementById('stageButtons');
+            stagesContainer.style.display = 'block';
+            stageButtons.innerHTML = '';
+
+            stagesConfig.forEach(({stage, levels}) => {
+                const button = document.createElement('button');
+                button.className = `stage-button ${stage === currentStage ? 'active' : ''}`;
+                button.innerHTML = `
+                    <div class="stage-number">階段 ${stage}</div>
+                    <div class="stage-levels">${levels}等</div>
+                `;
+                button.onclick = () => {
+                    currentStage = stage;
+                    document.querySelectorAll('.stage-button').forEach(btn => 
+                        btn.classList.remove('active'));
+                    button.classList.add('active');
+                    updateMaterials();
+                };
+                stageButtons.appendChild(button);
+            });
+        }
+
+        function updateMaterials() {
+            const weaponType = document.getElementById('weaponType').value;
+            const rank = document.getElementById('rank').value;
+            const materialsContainer = document.getElementById('materialsContainer');
+            const materialsList = document.getElementById('materialsList');
+            const materialsTitle = document.getElementById('materialsTitle');
+
+            if (weaponType && rank) {
+                materialsContainer.style.display = 'block';
+                const currentMaterials = materials[weaponType]?.[rank]?.[currentStage] || [];
+                
+                materialsTitle.textContent = `${weaponType} ${rank}級 所需材料 (階段 ${currentStage} - ${stagesConfig[currentStage-1].levels}等)`;
+                
+                materialsList.innerHTML = '';
+                currentMaterials.forEach((material, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'material-item';
+                    div.style.animationDelay = `${index * 0.15}s`;
+                    div.innerHTML = `
+                        <div class="material-name">
+                            <div class="material-dot"></div>
+                            <span>${material.name}</span>
+                        </div>
+                        <span class="material-amount">x${material.amount}</span>
+                    `;
+                    materialsList.appendChild(div);
+                });
+            }
+        }
+
+        function hideStagesAndMaterials() {
+            document.getElementById('stagesContainer').style.display = 'none';
+            document.getElementById('materialsContainer').style.display = 'none';
+            currentStage = 1;
+        }
+    </script>
+</body>
+</html>
