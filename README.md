@@ -13,24 +13,7 @@
 - 支援亮色 / 暗色系切換，並會記住上次選擇。
 - 資料來源整理自 `聚能開放_材料資料.xlsx`，並輸出為 `weapon_data.json` 供網頁讀取。
 
-## 使用方式
 
-直接部署整個資料夾即可，需保留以下檔案在同一層：
-
-- `index.html`
-- `weapon_data.json`
-
-本機預覽建議使用簡單伺服器，避免瀏覽器直接開檔時阻擋 JSON 讀取：
-
-```powershell
-py -m http.server 4173
-```
-
-然後開啟：
-
-```text
-http://localhost:4173
-```
 
 ## 更新資料
 
