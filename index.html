@@ -1,801 +1,1192 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>聚能武器材料查詢</title>
-    <style>
-        :root {
-            --primary: #1c4565;
-            --border: #436279;
-            --bg: #1a1a1a;
-            --text: #fff;
-            --text-glow: #4a9eff;
-            --shadow: #4a9eff;
-            --amount-color: #00ffff;
-            --error-color: #ff4a4a;
-            --success-color: #4aff4a;
-            --p: clamp(8px, 2vw, 12px);
-            --exp-current: #4aff4a;    
-            --exp-next: #ffd700;       
-            --exp-total: #ff7f50;      
-            --exp-remaining: #ff4a4a;  
-            --exp3: #ff69b4;      /* 3開 */
-            --exp2: #ba55d3;      /* 2開 */
-            --exp1: #20b2aa;      /* 1開 */
-            --exp0: #daa520;      /* 0開 */
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新瑪奇武器聚能查詢</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #efe7cf;
+      --bg-soft: #f9f4df;
+      --panel: rgba(250, 247, 229, 0.96);
+      --panel-strong: rgba(255, 251, 232, 0.98);
+      --ink: #211a13;
+      --muted: #4f4538;
+      --subtle: #6b5d49;
+      --line: rgba(116, 90, 43, 0.34);
+      --gold: #b98c34;
+      --gold-strong: #d9b35f;
+      --green: #748f28;
+      --blue: #2aaed0;
+      --red: #b6462f;
+      --shadow: 0 18px 48px rgba(55, 40, 18, 0.22);
+      --radius-lg: 10px;
+      --radius-md: 6px;
+      --radius-sm: 4px;
+      --space: clamp(16px, 2.4vw, 28px);
+      font-family: "Noto Serif TC", "Microsoft JhengHei", "PingFang TC", serif;
+    }
 
-        body {
-            min-height: 100vh;
-            background: var(--bg);
-            color: var(--text);
-            font-family: system-ui, sans-serif;
-            display: grid;
-            place-items: center;
-            padding: var(--p);
-        }
+    body.dark-theme {
+      color-scheme: dark;
+      --bg: #121217;
+      --bg-soft: #202027;
+      --panel: rgba(31, 30, 36, 0.96);
+      --panel-strong: rgba(38, 37, 44, 0.98);
+      --ink: #f7efd9;
+      --muted: #d3c6aa;
+      --subtle: #b8a783;
+      --line: rgba(219, 180, 96, 0.34);
+      --gold: #c99a42;
+      --gold-strong: #f0cb75;
+      --green: #98b64b;
+      --blue: #43bdd8;
+      --red: #f08a77;
+      --shadow: 0 20px 56px rgba(0, 0, 0, 0.46);
+    }
 
-        .app {
-            width: min(600px, 95vw);
-            background: var(--primary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: var(--p);
-            box-shadow: 0 0 20px rgba(74, 158, 255, 0.2);
-            transition: all 0.3s ease;
-        }
+    * {
+      box-sizing: border-box;
+    }
 
-        .app:hover {
-            box-shadow: 0 0 30px rgba(74, 158, 255, 0.3);
-        }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.8), transparent 22rem),
+        linear-gradient(90deg, transparent 0 4.5%, #24232b 4.5% 7.2%, transparent 7.2% 92.8%, #24232b 92.8% 95.5%, transparent 95.5%),
+        linear-gradient(180deg, #fbf8ef 0%, #eee2c6 54%, #e4d4ad 100%);
+      color: var(--ink);
+      font-weight: 600;
+    }
 
-        .title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: var(--p);
-            text-align: center;
-            padding: var(--p);
-            border-bottom: 1px solid var(--border);
-            text-shadow: 0 0 10px var(--text-glow),
-                         0 0 20px var(--text-glow),
-                         0 0 30px var(--text-glow);
-            letter-spacing: 1px;
-            position: relative;
-        }
+    body.dark-theme {
+      background:
+        radial-gradient(circle at 50% 0%, rgba(225, 190, 107, 0.22), transparent 24rem),
+        linear-gradient(90deg, transparent 0 4.5%, #181820 4.5% 7.2%, transparent 7.2% 92.8%, #181820 92.8% 95.5%, transparent 95.5%),
+        linear-gradient(180deg, #0f1114 0%, #1b1a20 54%, #121217 100%);
+    }
 
-        .title::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--text-glow), transparent);
-        }
+    body::before {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      content: "";
+      opacity: 0.5;
+      background-image:
+        radial-gradient(circle, rgba(255, 255, 255, 0.95) 0 2px, transparent 2.5px),
+        radial-gradient(circle, rgba(185, 140, 52, 0.18) 0 1px, transparent 1.6px),
+        linear-gradient(90deg, rgba(83, 63, 29, 0.18) 1px, transparent 1px),
+        linear-gradient(rgba(83, 63, 29, 0.12) 1px, transparent 1px);
+      background-position: 5.8% 70px, 0 0, 0 0, 0 0;
+      background-size: 7vw 128px, 18px 18px, 46px 46px, 46px 46px;
+      mask-image: linear-gradient(90deg, black 0 9%, transparent 9% 91%, black 91% 100%);
+    }
 
-        label {
-            display: block;
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 0 5px var(--text-glow);
-            letter-spacing: 0.5px;
-            transition: all 0.3s ease;
-        }
+    body.dark-theme::before {
+      opacity: 0.36;
+      background-image:
+        radial-gradient(circle, rgba(247, 239, 217, 0.92) 0 2px, transparent 2.5px),
+        radial-gradient(circle, rgba(240, 203, 117, 0.2) 0 1px, transparent 1.6px),
+        linear-gradient(90deg, rgba(240, 203, 117, 0.1) 1px, transparent 1px),
+        linear-gradient(rgba(240, 203, 117, 0.08) 1px, transparent 1px);
+    }
 
-        label:hover {
-            text-shadow: 0 0 8px var(--text-glow);
-        }
+    button,
+    input,
+    select {
+      font: inherit;
+    }
 
-        select {
-            background: rgba(0,0,0,.3);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 10px;
-            border-radius: 4px;
-            width: 100%;
-            font-size: 1rem;
-            font-weight: 500;
-            text-shadow: 0 0 5px var(--text-glow);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
+    button {
+      border: 0;
+    }
 
-        select:not(:disabled):hover {
-            border-color: var(--text-glow);
-            box-shadow: 0 0 10px rgba(74, 158, 255, 0.2);
-        }
+    .app {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: clamp(20px, 4vw, 46px) 0;
+    }
 
-        select option {
-            background: var(--primary);
-            color: var(--text);
-            font-weight: 500;
-        }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 2px solid #2b2830;
+      border-radius: var(--radius-lg);
+      padding: clamp(28px, 5vw, 54px) clamp(26px, 6vw, 72px);
+      background:
+        linear-gradient(90deg, rgba(37, 35, 43, 0.96) 0 30px, transparent 30px calc(100% - 30px), rgba(37, 35, 43, 0.96) calc(100% - 30px)),
+        linear-gradient(180deg, #27252d 0 22px, var(--gold-strong) 22px 30px, transparent 30px),
+        radial-gradient(circle at 12% 22%, rgba(255, 255, 255, 0.65), transparent 8rem),
+        linear-gradient(135deg, #fffdf0 0%, #eee4c7 48%, #f9f3da 100%);
+      box-shadow: var(--shadow);
+    }
 
-        .stage-button {
-            background: rgba(0,0,0,.2);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: var(--p);
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            text-shadow: 0 0 5px var(--text-glow);
-            position: relative;
-            overflow: hidden;
-        }
+    body.dark-theme .hero {
+      border-color: #0e0d13;
+      background:
+        linear-gradient(90deg, rgba(18, 18, 24, 0.98) 0 30px, transparent 30px calc(100% - 30px), rgba(18, 18, 24, 0.98) calc(100% - 30px)),
+        linear-gradient(180deg, #15151d 0 22px, var(--gold-strong) 22px 30px, transparent 30px),
+        radial-gradient(circle at 12% 22%, rgba(240, 203, 117, 0.18), transparent 8rem),
+        linear-gradient(135deg, #28252c 0%, #1e1d23 48%, #2d2a30 100%);
+    }
 
-        .stage-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(74, 158, 255, 0.1), transparent);
-            transition: 0.5s;
-        }
+    .hero::before {
+      position: absolute;
+      inset: 30px;
+      border: 1px solid rgba(92, 72, 34, 0.48);
+      box-shadow:
+        inset 0 0 0 4px rgba(218, 179, 91, 0.34),
+        inset 0 0 0 7px rgba(255, 255, 255, 0.45);
+      content: "";
+      pointer-events: none;
+    }
 
-        .stage-button:hover::before {
-            left: 100%;
-        }
+    body.dark-theme .hero::before {
+      border-color: rgba(240, 203, 117, 0.38);
+      box-shadow:
+        inset 0 0 0 4px rgba(218, 179, 91, 0.18),
+        inset 0 0 0 7px rgba(255, 255, 255, 0.04);
+    }
 
-        .stage-button:hover {
-            background: rgba(0,0,0,.3);
-            text-shadow: 0 0 10px var(--text-glow);
-            border-color: var(--text-glow);
-            transform: translateY(-2px);
-        }
+    .hero::after {
+      position: absolute;
+      right: 16px;
+      top: 14px;
+      width: 64px;
+      height: 64px;
+      border: 5px double rgba(255, 250, 224, 0.9);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, #fff7d8 0 6px, #665d52 7px 14px, #cdb879 15px 18px, transparent 19px),
+        conic-gradient(from 20deg, transparent 0 10deg, rgba(255, 255, 255, 0.95) 10deg 17deg, transparent 17deg 35deg);
+      content: "";
+      opacity: 0.84;
+    }
 
-        .stage-button.active {
-            background: var(--shadow);
-            border-color: var(--shadow);
-            text-shadow: 0 0 10px var(--text-glow),
-                         0 0 20px var(--text-glow);
-        }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      color: var(--gold-strong);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
 
-        .material-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: var(--p) 0;
-            animation: slideIn 0.5s ease-out forwards;
-            opacity: 0;
-            transform: translateX(1rem);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            font-weight: 600;
-            text-shadow: 0 0 5px var(--text-glow);
-            transition: all 0.3s ease;
-        }
+    .eyebrow::before {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 22px var(--gold);
+      content: "";
+    }
 
-        .material-item:hover {
-            background: rgba(74, 158, 255, 0.1);
-            padding-left: var(--p);
-            padding-right: var(--p);
-            border-radius: 4px;
-        }
+    h1 {
+      max-width: 760px;
+      margin: 0;
+      font-size: clamp(2.25rem, 6vw, 5.1rem);
+      line-height: 0.98;
+      letter-spacing: -0.06em;
+      color: #17110c;
+      text-shadow: 0 2px 0 rgba(255, 255, 255, 0.8);
+      position: relative;
+      z-index: 1;
+    }
 
-        .material-amount {
-            font-weight: 800;
-            color: var(--amount-color);
-            text-shadow: 0 0 10px var(--amount-color);
-            padding: 2px 8px;
-            border-radius: 4px;
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-        }
+    body.dark-theme h1 {
+      color: #fff6df;
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.58), 0 0 18px rgba(240, 203, 117, 0.18);
+    }
 
-        .material-amount:hover {
-            transform: scale(1.1);
-        }
+    .theme-toggle {
+      border: 1px solid rgba(98, 72, 30, 0.42);
+      border-radius: 999px;
+      padding: 7px 12px;
+      color: #fff8d6;
+      background: linear-gradient(180deg, #4b4035, #24232b);
+      box-shadow: 0 8px 18px rgba(42, 32, 20, 0.18);
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 900;
+      transition: transform 160ms ease, filter 160ms ease;
+    }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            backdrop-filter: blur(4px);
-        }
+    .theme-toggle:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
 
-        .modal-content {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--primary);
-            padding: 2rem;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            min-width: 300px;
-            box-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
-        }
+    .lead {
+      max-width: 720px;
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.8vw, 1.2rem);
+      line-height: 1.8;
+    }
 
-        .modal-title {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border);
-            text-align: center;
-            text-shadow: 0 0 10px var(--text-glow);
-        }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
 
-        .exp-info {
-            margin-bottom: 1rem;
-        }
+    .stat-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      background: rgba(9, 15, 16, 0.38);
+    }
 
-        .close-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
-            color: var(--text);
-            font-size: 1.5rem;
-            cursor: pointer;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: all 0.3s;
-        }
+    .stat-value {
+      display: block;
+      color: var(--gold-strong);
+      font-size: 1.65rem;
+      font-weight: 900;
+    }
 
-        .close-button:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
+    .stat-label {
+      color: var(--subtle);
+      font-size: 0.86rem;
+    }
 
-        .exp-calculate-btn {
-            background: rgba(74, 158, 255, 0.2);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 1rem;
-            width: 100%;
-            font-weight: 600;
-            text-shadow: 0 0 5px var(--text-glow);
-        }
+    .workspace {
+      display: grid;
+      grid-template-columns: 310px minmax(0, 1fr);
+      gap: var(--space);
+      margin-top: var(--space);
+    }
 
-        .exp-calculate-btn:hover {
-            background: rgba(74, 158, 255, 0.3);
-            border-color: var(--text-glow);
-        }
+    .panel {
+      position: relative;
+      border: 2px solid #2b2830;
+      border-radius: var(--radius-lg);
+      background:
+        linear-gradient(90deg, rgba(37, 35, 43, 0.96) 0 18px, transparent 18px calc(100% - 18px), rgba(37, 35, 43, 0.96) calc(100% - 18px)),
+        linear-gradient(180deg, rgba(37, 35, 43, 0.96) 0 18px, var(--gold-strong) 18px 24px, transparent 24px),
+        radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.72), transparent 9rem),
+        var(--panel);
+      box-shadow: var(--shadow);
+    }
 
-        .exp-current {
-            color: var(--exp-current);
-            text-shadow: 0 0 10px var(--exp-current),
-                         0 0 20px var(--exp-current);
-        }
+    body.dark-theme .panel {
+      border-color: #0e0d13;
+      background:
+        linear-gradient(90deg, rgba(18, 18, 24, 0.98) 0 18px, transparent 18px calc(100% - 18px), rgba(18, 18, 24, 0.98) calc(100% - 18px)),
+        linear-gradient(180deg, rgba(18, 18, 24, 0.98) 0 18px, var(--gold-strong) 18px 24px, transparent 24px),
+        radial-gradient(circle at 18% 14%, rgba(240, 203, 117, 0.12), transparent 9rem),
+        var(--panel);
+    }
 
-        .exp-next {
-            color: var(--exp-next);
-            text-shadow: 0 0 10px var(--exp-next),
-                         0 0 20px var(--exp-next);
-        }
+    .panel::before {
+      position: absolute;
+      inset: 22px;
+      border: 1px solid rgba(116, 90, 43, 0.28);
+      pointer-events: none;
+      content: "";
+    }
 
-        .exp-total {
-            color: var(--exp-total);
-            text-shadow: 0 0 10px var(--exp-total),
-                         0 0 20px var(--exp-total);
-        }
+    body.dark-theme .panel::before {
+      border-color: rgba(240, 203, 117, 0.2);
+    }
 
-        .exp-remaining {
-            color: var(--exp-remaining);
-            text-shadow: 0 0 10px var(--exp-remaining),
-                         0 0 20px var(--exp-remaining);
-        }
+    .finder {
+      position: sticky;
+      top: 16px;
+      align-self: start;
+      padding: 34px 28px 24px;
+    }
 
-        /* 新增的自訂義經驗值樣式 */
-        .exp-custom-input {
-            margin-bottom: 1rem;
-            padding: 0.8rem;
-            border-radius: 6px;
-            background: rgba(0,0,0,.2);
-            border: 1px solid var(--border);
-            transition: all 0.3s ease;
-        }
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
 
-        .exp-custom-input:hover {
-            box-shadow: 0 0 10px rgba(74, 158, 255, 0.2);
-        }
+    .panel-title h2,
+    .panel-title h3 {
+      margin: 0;
+      color: #1b140e;
+      font-size: 1.08rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+    }
 
-        .exp-3 { border-color: var(--exp3); }
-        .exp-2 { border-color: var(--exp2); }
-        .exp-1 { border-color: var(--exp1); }
-        .exp-0 { border-color: var(--exp0); }
+    body.dark-theme .panel-title h2,
+    body.dark-theme .panel-title h3 {
+      color: #fff4d8;
+    }
 
-        .exp-custom-input label {
-            color: var(--text);
-            margin-bottom: 0.5rem;
-            display: block;
-        }
+    .pill {
+      flex: none;
+      border: 1px solid rgba(98, 72, 30, 0.42);
+      border-radius: 999px;
+      padding: 6px 10px;
+      color: #fff8d6;
+      background: linear-gradient(180deg, #4b4035, #24232b);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
 
-        .exp-custom-input input {
-            width: 100%;
-            background: rgba(0,0,0,.3);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 0.5rem;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
+    .search {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 13px 15px;
+      outline: none;
+      color: var(--ink);
+      background: rgba(255, 253, 239, 0.78);
+      box-shadow: inset 0 1px 6px rgba(80, 58, 24, 0.12);
+      font-weight: 700;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
 
-        .exp-custom-input input:focus {
-            outline: none;
-            border-color: var(--shadow);
-            box-shadow: 0 0 5px var(--shadow);
-        }
+    body.dark-theme .search,
+    body.dark-theme select,
+    body.dark-theme input[type="number"] {
+      color: var(--ink);
+      border-color: rgba(240, 203, 117, 0.24);
+      background: rgba(15, 15, 20, 0.68);
+      box-shadow: inset 0 1px 8px rgba(0, 0, 0, 0.34);
+    }
 
-        .flex { display: flex; gap: var(--p); }
-        .grid { display: grid; gap: var(--p); }
-        .form-group { margin-bottom: var(--p); }
-        
-        select:focus {
-            outline: none;
-            border-color: var(--shadow);
-            box-shadow: 0 0 5px var(--shadow);
-        }
+    .search::placeholder {
+      color: #7a6b56;
+      opacity: 1;
+    }
 
-        select:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+    body.dark-theme .search::placeholder {
+      color: #b9aa8d;
+    }
 
-        .stages-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-            gap: var(--p);
-            margin-top: var(--p);
-        }
+    .search:focus {
+      border-color: rgba(185, 140, 52, 0.76);
+      box-shadow: 0 0 0 4px rgba(185, 140, 52, 0.16), inset 0 1px 6px rgba(80, 58, 24, 0.12);
+    }
 
-        .stage-levels {
-            font-size: 0.75rem;
-            opacity: 0.9;
-            margin-top: 4px;
-        }
+    .weapon-list {
+      display: grid;
+      gap: 8px;
+      max-height: 520px;
+      margin-top: 14px;
+      overflow: auto;
+      padding-right: 5px;
+    }
 
-        .materials-container {
-            background: rgba(0,0,0,.2);
-            border-radius: 4px;
-            padding: var(--p);
-            margin-top: var(--p);
-            border: 1px solid var(--border);
-            transition: all 0.3s ease;
-        }
+    .weapon-button {
+      width: 100%;
+      border: 1px solid rgba(116, 90, 43, 0.24);
+      border-radius: var(--radius-sm);
+      padding: 12px 13px;
+      color: #4c4031;
+      background: rgba(255, 253, 239, 0.62);
+      cursor: pointer;
+      text-align: left;
+      font-weight: 800;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease;
+    }
 
-        .materials-container:hover {
-            border-color: var(--text-glow);
-            box-shadow: 0 0 15px rgba(74, 158, 255, 0.2);
-        }
+    body.dark-theme .weapon-button {
+      color: #ddcfb2;
+      border-color: rgba(240, 203, 117, 0.18);
+      background: rgba(255, 255, 255, 0.04);
+    }
 
-        .material-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--amount-color);
-            border-radius: 50%;
-            margin-right: 0.5rem;
-            box-shadow: 0 0 5px var(--amount-color),
-                       0 0 10px var(--amount-color);
-            transition: all 0.3s ease;
-        }
+    .weapon-button:hover {
+      transform: translateX(3px);
+      border-color: rgba(185, 140, 52, 0.48);
+      color: var(--ink);
+      background: #fff7dc;
+    }
 
-        .material-item:hover .material-dot {
-            transform: scale(1.2);
-        }
+    body.dark-theme .weapon-button:hover {
+      color: #fff4d8;
+      border-color: rgba(240, 203, 117, 0.45);
+      background: rgba(240, 203, 117, 0.09);
+    }
 
-        .loading {
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: var(--p);
-        }
+    .weapon-button.active {
+      border-color: #6c4c18;
+      color: #251b10;
+      background: linear-gradient(180deg, #f9e297, #d7a84d 48%, #fff1b7);
+      font-weight: 900;
+    }
 
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(74, 158, 255, 0.1);
-            border-left-color: var(--text-glow);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+    .content {
+      display: grid;
+      gap: var(--space);
+    }
 
-        .error-message {
-            color: var(--error-color);
-            text-align: center;
-            padding: var(--p);
-            background: rgba(255, 74, 74, 0.1);
-            border-radius: 4px;
-            margin-top: var(--p);
-            display: none;
-        }
+    .control-deck {
+      padding: 34px 28px 24px;
+    }
 
-        .exp-input {
-            background: rgba(0,0,0,.3);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 10px;
-            border-radius: 4px;
-            width: 100%;
-            font-size: 1rem;
-            margin-bottom: var(--p);
-        }
+    .select-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: end;
+    }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+    label {
+      display: grid;
+      gap: 8px;
+      color: #433829;
+      font-size: 0.92rem;
+      font-weight: 900;
+    }
 
-        @keyframes slideIn {
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
+    body.dark-theme label {
+      color: #eadfc5;
+    }
 
-        @media (max-width: 400px) {
-            .flex { flex-direction: column; }
-            ```css
-            .stages-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-    </style>
+    select,
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      outline: none;
+      color: var(--ink);
+      background: rgba(255, 253, 239, 0.82);
+      box-shadow: inset 0 1px 6px rgba(80, 58, 24, 0.12);
+      font-weight: 800;
+    }
+
+    .rank-tabs,
+    .stages {
+      display: grid;
+      gap: 10px;
+    }
+
+    .rank-tabs {
+      grid-template-columns: repeat(3, 76px);
+    }
+
+    .rank-button,
+    .stage-button,
+    .ghost-button,
+    .primary-button {
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .rank-button {
+      border: 1px solid var(--line);
+      padding: 12px;
+      color: #5a4d3b;
+      background: rgba(255, 253, 239, 0.68);
+      font-weight: 900;
+    }
+
+    body.dark-theme .rank-button,
+    body.dark-theme .stage-button,
+    body.dark-theme .ghost-button {
+      color: #ddcfb2;
+      border-color: rgba(240, 203, 117, 0.22);
+      background: rgba(255, 255, 255, 0.045);
+    }
+
+    .rank-button.active {
+      color: #241a0d;
+      background: linear-gradient(180deg, #f9e297, #d7a84d 48%, #fff1b7);
+    }
+
+    .stages {
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      margin-top: 18px;
+    }
+
+    .stage-button {
+      border: 1px solid var(--line);
+      padding: 12px 8px;
+      color: #514534;
+      background: rgba(255, 253, 239, 0.68);
+      font-weight: 900;
+    }
+
+    .stage-button:hover,
+    .rank-button:hover,
+    .ghost-button:hover,
+    .primary-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .stage-button.active {
+      border-color: rgba(116, 143, 40, 0.78);
+      color: var(--ink);
+      background: linear-gradient(180deg, rgba(226, 238, 151, 0.85), rgba(166, 185, 68, 0.56));
+    }
+
+    body.dark-theme .stage-button.active {
+      color: #fff8d6;
+      background: linear-gradient(180deg, rgba(139, 160, 54, 0.9), rgba(77, 94, 25, 0.78));
+    }
+
+    .stage-number {
+      display: block;
+      font-weight: 900;
+    }
+
+    .stage-range {
+      display: block;
+      margin-top: 4px;
+      color: #74634c;
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
+    body.dark-theme .stage-range {
+      color: #c9bb9b;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+      gap: var(--space);
+      align-items: start;
+    }
+
+    .materials,
+    .exp-card {
+      padding: 34px 28px 24px;
+    }
+
+    .selection-title {
+      margin: 0;
+      color: #1b140e;
+      font-size: clamp(1.4rem, 3vw, 2.2rem);
+      font-weight: 900;
+      line-height: 1.15;
+    }
+
+    body.dark-theme .selection-title {
+      color: #fff4d8;
+    }
+
+    .selection-subtitle {
+      margin: 8px 0 0;
+      color: #514534;
+      font-weight: 800;
+    }
+
+    body.dark-theme .selection-subtitle {
+      color: #d8cdb3;
+    }
+
+    .material-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .material-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      border: 2px solid rgba(91, 84, 82, 0.62);
+      border-radius: 2px;
+      padding: 13px 14px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.56), transparent 38%),
+        linear-gradient(135deg, rgba(83, 76, 71, 0.12), transparent 34%),
+        rgba(244, 237, 210, 0.86);
+      box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, 0.52),
+        inset 0 0 22px rgba(83, 76, 71, 0.08);
+      animation: rise 360ms ease both;
+      cursor: copy;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    body.dark-theme .material-item {
+      border-color: rgba(240, 203, 117, 0.22);
+      background:
+        radial-gradient(circle at 50% 48%, rgba(240, 203, 117, 0.13), transparent 38%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 34%),
+        rgba(18, 18, 24, 0.74);
+      box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, 0.03),
+        inset 0 0 22px rgba(0, 0, 0, 0.22);
+    }
+
+    .material-item:hover {
+      border-color: rgba(185, 140, 52, 0.72);
+      background:
+        radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.72), transparent 38%),
+        rgba(253, 244, 204, 0.94);
+      transform: translateY(-1px);
+    }
+
+    body.dark-theme .material-item:hover {
+      border-color: rgba(240, 203, 117, 0.56);
+      background:
+        radial-gradient(circle at 50% 48%, rgba(240, 203, 117, 0.2), transparent 38%),
+        rgba(36, 34, 40, 0.92);
+    }
+
+    .material-name {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: #241b12;
+      font-weight: 900;
+      line-height: 1.55;
+    }
+
+    body.dark-theme .material-name {
+      color: #fff4d8;
+    }
+
+    .amount {
+      border-radius: 999px;
+      padding: 6px 10px;
+      color: #fff8dc;
+      background: linear-gradient(180deg, #627621, #31400d);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      color: #514534;
+      background: rgba(255, 253, 239, 0.54);
+      font-weight: 800;
+      text-align: center;
+    }
+
+    body.dark-theme .empty {
+      color: #d8cdb3;
+      background: rgba(15, 15, 20, 0.48);
+    }
+
+    .exp-card {
+      position: sticky;
+      top: 16px;
+    }
+
+    .exp-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .essence-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .essence-row label {
+      gap: 6px;
+      font-size: 0.78rem;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .primary-button,
+    .ghost-button {
+      border: 1px solid transparent;
+      padding: 12px 15px;
+      font-weight: 900;
+    }
+
+    .primary-button {
+      border-color: #6c4c18;
+      color: #261b0c;
+      background: linear-gradient(180deg, #fff0ae, #d4a04a 48%, #fff2bb);
+    }
+
+    .ghost-button {
+      border-color: var(--line);
+      color: var(--muted);
+      background: rgba(255, 253, 239, 0.7);
+    }
+
+    .exp-result {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid rgba(116, 90, 43, 0.24);
+      padding-top: 10px;
+      color: #514534;
+      font-weight: 800;
+    }
+
+    body.dark-theme .result-row {
+      color: #d8cdb3;
+      border-top-color: rgba(240, 203, 117, 0.2);
+    }
+
+    .result-row strong {
+      color: #1b140e;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    body.dark-theme .result-row strong {
+      color: #fff4d8;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 5;
+      max-width: min(360px, calc(100vw - 40px));
+      border: 1px solid rgba(238, 143, 131, 0.36);
+      border-radius: 16px;
+      padding: 14px 16px;
+      color: #fff8dc;
+      background: linear-gradient(180deg, #3d3540, #24232b);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .loading {
+      color: var(--muted);
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 920px) {
+      .workspace,
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .finder,
+      .exp-card {
+        position: static;
+      }
+
+      .weapon-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-height: none;
+      }
+
+      .stages {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      .stats,
+      .select-row,
+      .exp-grid,
+      .essence-row,
+      .weapon-list {
+        grid-template-columns: 1fr;
+      }
+
+      .rank-tabs {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 1ms !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="app">
-        <h1 class="title">聚能武器材料查詢</h1>
-        
-        <div class="grid">
-            <div class="form-group">
-                <label>武器分類</label>
-                <select id="weaponType">
-                    <option value="">請選擇武器類型</option>
-                </select>
-            </div>
+  <main class="app">
+    <section class="hero" aria-labelledby="pageTitle">
+      <h1 id="pageTitle">新瑪奇武器聚能查詢</h1>
+    </section>
 
-            <div class="form-group">
-                <label>階級</label>
-                <select id="rank" disabled>
-                    <option value="">請選擇階級</option>
-                    <option value="S">S 級</option>
-                    <option value="A">A 級</option>
-                    <option value="B">B 級</option>
-                </select>
-            </div>
-
-            <div id="stagesContainer" class="form-group" style="display: none;">
-                <label>階段</label>
-                <div class="stages-grid" id="stageButtons"></div>
-            </div>
-
-            <div class="loading">
-                <div class="spinner"></div>
-            </div>
-
-            <div class="error-message" id="errorMessage"></div>
-
-            <div id="materialsContainer" style="display: none;">
-                <label id="materialsTitle">所需材料</label>
-                <div class="materials-container" id="materialsList"></div>
-            </div>
+    <section class="workspace" aria-label="查詢工作區">
+      <aside class="panel finder">
+        <div class="panel-title">
+          <h2>武器分類</h2>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">暗色系</button>
         </div>
-    </div>
+        <input class="search" id="weaponSearch" type="search" placeholder="搜尋：弓、雙槍、魔杖..." autocomplete="off">
+        <div class="weapon-list loading" id="weaponList">讀取資料中...</div>
+      </aside>
 
-    <div class="modal" id="expModal">
-        <div class="modal-content">
-            <button class="close-button" onclick="closeExpModal()">×</button>
-            <div class="modal-title">經驗值計算結果</div>
-            <div class="exp-info material-item">
-                <span>當前等級所需總經驗</span>
-                <span class="material-amount exp-current" id="currentLevelTotal">0</span>
+      <div class="content">
+        <section class="panel control-deck">
+          <div class="panel-title">
+            <h2>查詢條件</h2>
+            <span class="pill" id="currentBadge">尚未選擇</span>
+          </div>
+          <div class="select-row">
+            <label>
+              手機版武器選單
+              <select id="weaponSelect">
+                <option value="">讀取資料中...</option>
+              </select>
+            </label>
+            <div>
+              <label>Rank</label>
+              <div class="rank-tabs" id="rankTabs" aria-label="Rank 選擇"></div>
             </div>
-            <div class="exp-info material-item">
-                <span>下一等級</span>
-                <span class="material-amount exp-next" id="nextLevel">0</span>
+          </div>
+          <div class="stages" id="stageTabs" aria-label="階段選擇"></div>
+        </section>
+
+        <section class="result-grid">
+          <article class="panel materials">
+            <div class="panel-title">
+              <div>
+                <h2 class="selection-title" id="selectionTitle">請先選擇武器</h2>
+                <p class="selection-subtitle" id="selectionSubtitle">材料會在這裡依照目前階段顯示。</p>
+              </div>
+              <span class="pill" id="materialCount">0 項</span>
             </div>
-            <div class="exp-info material-item">
-                <span>下一等級所需總經驗</span>
-                <span class="material-amount exp-total" id="nextLevelTotal">0</span>
+            <input class="search" id="materialSearch" type="search" placeholder="在目前材料中搜尋..." autocomplete="off">
+            <div class="material-list" id="materialList">
+              <div class="empty">資料載入後，選擇武器即可開始查詢。</div>
             </div>
-            <div class="exp-info material-item">
-                <span>還需要經驗值</span>
-                <span class="material-amount exp-remaining" id="remaining">0</span>
+          </article>
+
+          <aside class="panel exp-card" aria-labelledby="expTitle">
+            <div class="panel-title">
+              <h3 id="expTitle">經驗值補足</h3>
+              <span class="pill" id="rankBadge">Rank S</span>
             </div>
-        </div>
-    </div>
+            <div class="exp-grid">
+              <label>
+                目前等級
+                <input id="currentLevel" type="number" min="1" max="49" value="1">
+              </label>
+              <label>
+                目前經驗
+                <input id="currentExp" type="number" min="0" value="0">
+              </label>
+            </div>
+            <div class="essence-row">
+              <label>3星<input id="exp3" type="number" min="0" value="0"></label>
+              <label>2星<input id="exp2" type="number" min="0" value="0"></label>
+              <label>1星<input id="exp1" type="number" min="0" value="0"></label>
+              <label>0星<input id="exp0" type="number" min="0" value="0"></label>
+            </div>
+            <div class="action-row">
+              <button class="primary-button" id="calculateExp">計算還差多少</button>
+              <button class="ghost-button" id="resetExp">重置</button>
+            </div>
+            <div class="exp-result" id="expResult">
+              <div class="result-row"><span>素材經驗加總</span><strong>0</strong></div>
+              <div class="result-row"><span>下一等級需求</span><strong>--</strong></div>
+              <div class="result-row"><span>還需要</span><strong>--</strong></div>
+            </div>
+          </aside>
+        </section>
+      </div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script>
-        let materials = {};
-        let currentStage = 1;
-        const stagesConfig = [
-            { stage: 1, levels: "0~5" },
-            { stage: 2, levels: "6~10" },
-            { stage: 3, levels: "11~15" },
-            { stage: 4, levels: "16~20" },
-            { stage: 5, levels: "21~25" },
-            { stage: 6, levels: "26~30" },
-            { stage: 7, levels: "31~35" },
-            { stage: 8, levels: "36~40" },
-            { stage: 9, levels: "41~45" }
-        ];
+  <script>
+    const THEME_KEY = "mabinogi-energy-theme";
+    const state = {
+      data: {},
+      weapon: "",
+      rank: "S",
+      stage: "1",
+      weaponQuery: "",
+      materialQuery: ""
+    };
 
-        const expRequirements = {
-            "B": {
-                1: 70, 2: 80, 3: 90, 4: 100, 5: 120, 6: 140, 7: 160, 8: 190, 9: 220, 10: 260,
-                11: 300, 12: 350, 13: 400, 14: 500, 15: 600, 16: 700, 17: 800, 18: 900, 19: 1000, 20: 1200,
-                21: 1400, 22: 1600, 23: 1900, 24: 2200, 25: 2600, 26: 3000, 27: 3500, 28: 4100, 29: 4800, 30: 5600,
-                31: 6500, 32: 7500, 33: 8700, 34: 10100, 35: 11700, 36: 13600, 37: 15800, 38: 18300, 39: 21000, 40: 24000,
-                41: 27000, 42: 32000, 43: 37000, 44: 43000, 45: 50000, 46: 58000, 47: 67000, 48: 78000, 49: 90000
-            },
-            "A": {
-                1: 120, 2: 140, 3: 170, 4: 200, 5: 240, 6: 290, 7: 350, 8: 420, 9: 500, 10: 600,
-                11: 720, 12: 860, 13: 1000, 14: 1200, 15: 1400, 16: 1700, 17: 2000, 18: 2400, 19: 2900, 20: 3500,
-                21: 4200, 22: 5000, 23: 6000, 24: 7200, 25: 8600, 26: 10300, 27: 12400, 28: 14900, 29: 17900, 30: 21500,
-                31: 25800, 32: 31000, 33: 37200, 34: 44600, 35: 53500, 36: 64200, 37: 77000, 38: 92400, 39: 111000, 40: 133000,
-                41: 160000, 42: 192000, 43: 230000, 44: 276000, 45: 331000, 46: 397000, 47: 476000, 48: 571000, 49: 685000
-            },
-            "S": {
-                1: 200, 2: 250, 3: 300, 4: 350, 5: 710, 6: 1017, 7: 1303, 8: 1575, 9: 1841, 10: 3509,
-                11: 3962, 12: 4438, 13: 4948, 14: 5504, 15: 9477, 16: 17427, 17: 21606, 18: 24048, 19: 26786, 20: 29853,
-                21: 36282, 22: 39105, 23: 43357, 24: 46069, 25: 51275, 26: 57008, 27: 63301, 28: 68186, 29: 71697, 30: 74867,
-                31: 84728, 32: 94314, 33: 104658, 34: 122792, 35: 137749, 36: 163000, 37: 195500, 38: 227000, 39: 275000, 40: 325000,
-                41: 390000, 42: 470000, 43: 560000, 44: 650000, 45: 740000, 46: 830000, 47: 940000, 48: 1040000, 49: 1150000
-            }
-        };
+    const stages = [
+      { id: "1", range: "0-5" },
+      { id: "2", range: "6-10" },
+      { id: "3", range: "11-15" },
+      { id: "4", range: "16-20" },
+      { id: "5", range: "21-25" },
+      { id: "6", range: "26-30" },
+      { id: "7", range: "31-35" },
+      { id: "8", range: "36-40" },
+      { id: "9", range: "41-45" }
+    ];
 
-        // 自訂義經驗值
-        const customExpValues = {
-            "3開": 58327,
-            "2開": 7837,
-            "1開": 397,
-            "0開": 150
-        };
+    const expRequirements = {
+      B: {
+        1: 70, 2: 80, 3: 90, 4: 100, 5: 120, 6: 140, 7: 160, 8: 190, 9: 220, 10: 260,
+        11: 300, 12: 350, 13: 400, 14: 500, 15: 600, 16: 700, 17: 800, 18: 900, 19: 1000, 20: 1200,
+        21: 1400, 22: 1600, 23: 1900, 24: 2200, 25: 2600, 26: 3000, 27: 3500, 28: 4100, 29: 4800, 30: 5600,
+        31: 6500, 32: 7500, 33: 8700, 34: 10100, 35: 11700, 36: 13600, 37: 15800, 38: 18300, 39: 21000, 40: 24000,
+        41: 27000, 42: 32000, 43: 37000, 44: 43000, 45: 50000, 46: 58000, 47: 67000, 48: 78000, 49: 90000
+      },
+      A: {
+        1: 120, 2: 140, 3: 170, 4: 200, 5: 240, 6: 290, 7: 350, 8: 420, 9: 500, 10: 600,
+        11: 720, 12: 860, 13: 1000, 14: 1200, 15: 1400, 16: 1700, 17: 2000, 18: 2400, 19: 2900, 20: 3500,
+        21: 4200, 22: 5000, 23: 6000, 24: 7200, 25: 8600, 26: 10300, 27: 12400, 28: 14900, 29: 17900, 30: 21500,
+        31: 25800, 32: 31000, 33: 37200, 34: 44600, 35: 53500, 36: 64200, 37: 77000, 38: 92400, 39: 111000, 40: 133000,
+        41: 160000, 42: 192000, 43: 230000, 44: 276000, 45: 331000, 46: 397000, 47: 476000, 48: 571000, 49: 685000
+      },
+      S: {
+        1: 200, 2: 250, 3: 300, 4: 350, 5: 710, 6: 1017, 7: 1303, 8: 1575, 9: 1841, 10: 3509,
+        11: 3962, 12: 4438, 13: 4948, 14: 5504, 15: 9477, 16: 17427, 17: 21606, 18: 24048, 19: 26786, 20: 29853,
+        21: 36282, 22: 39105, 23: 43357, 24: 46069, 25: 51275, 26: 57008, 27: 63301, 28: 68186, 29: 71697, 30: 74867,
+        31: 84728, 32: 94314, 33: 104658, 34: 122792, 35: 137749, 36: 163000, 37: 195500, 38: 227000, 39: 275000, 40: 325000,
+        41: 390000, 42: 470000, 43: 560000, 44: 650000, 45: 740000, 46: 830000, 47: 940000, 48: 1040000, 49: 1150000
+      }
+    };
 
-        function showLoading() {
-            document.querySelector('.loading').style.display = 'flex';
+    const essenceExp = {
+      exp3: 58327,
+      exp2: 7837,
+      exp1: 397,
+      exp0: 150
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+    const format = (value) => Number(value || 0).toLocaleString("zh-TW");
+
+    function applyTheme(theme) {
+      const isDark = theme === "dark";
+      document.body.classList.toggle("dark-theme", isDark);
+      $("#themeToggle").textContent = isDark ? "亮色系" : "暗色系";
+      $("#themeToggle").setAttribute("aria-pressed", String(isDark));
+      localStorage.setItem(THEME_KEY, theme);
+    }
+
+    function showToast(message) {
+      const toast = $("#toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
+    async function loadData() {
+      try {
+        const response = await fetch("./weapon_data.json", { cache: "no-store" });
+        if (!response.ok) throw new Error("資料檔讀取失敗");
+        state.data = await response.json();
+        const firstWeapon = Object.keys(state.data)[0] || "";
+        state.weapon = firstWeapon;
+        if ($("#weaponCount")) {
+          $("#weaponCount").textContent = Object.keys(state.data).length;
         }
+        renderAll();
+      } catch (error) {
+        $("#weaponList").innerHTML = '<div class="empty">讀不到 weapon_data.json，請用本機伺服器開啟頁面。</div>';
+        $("#weaponSelect").innerHTML = '<option value="">資料讀取失敗</option>';
+        showToast(error.message);
+      }
+    }
 
-        function hideLoading() {
-            document.querySelector('.loading').style.display = 'none';
-        }
+    function renderAll() {
+      renderWeaponList();
+      renderWeaponSelect();
+      renderRankTabs();
+      renderStageTabs();
+      renderMaterials();
+      updateBadges();
+      calculateExp();
+    }
 
-        function showError(message) {
-            const errorElement = document.getElementById('errorMessage');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-            setTimeout(() => {
-                errorElement.style.opacity = '0';
-                setTimeout(() => {
-                    errorElement.style.display = 'none';
-                    errorElement.style.opacity = '1';
-                }, 300);
-            }, 3000);
-        }
+    function renderWeaponList() {
+      const weapons = Object.keys(state.data).filter((weapon) => weapon.includes(state.weaponQuery));
+      $("#weaponList").classList.remove("loading");
+      $("#weaponList").innerHTML = weapons.map((weapon) => `
+        <button class="weapon-button ${weapon === state.weapon ? "active" : ""}" type="button" data-weapon="${weapon}">
+          ${weapon}
+        </button>
+      `).join("") || '<div class="empty">找不到符合的武器分類。</div>';
+    }
 
-        function showExpModal() {
-            document.getElementById('expModal').style.display = 'block';
-        }
+    function renderWeaponSelect() {
+      $("#weaponSelect").innerHTML = Object.keys(state.data).map((weapon) => `
+        <option value="${weapon}" ${weapon === state.weapon ? "selected" : ""}>${weapon}</option>
+      `).join("");
+    }
 
-        function closeExpModal() {
-            document.getElementById('expModal').style.display = 'none';
-        }
+    function renderRankTabs() {
+      $("#rankTabs").innerHTML = ["S", "A", "B"].map((rank) => `
+        <button class="rank-button ${rank === state.rank ? "active" : ""}" type="button" data-rank="${rank}">
+          ${rank}
+        </button>
+      `).join("");
+    }
 
-        // 網頁加載事件
-        window.onload = async function() {
-            showLoading();
-            try {
-                const response = await fetch("./weapon_data.json");
-                if (!response.ok) {
-                    throw new Error("資料獲取失敗！");
-                }
-                materials = await response.json();
+    function renderStageTabs() {
+      $("#stageTabs").innerHTML = stages.map((stage) => `
+        <button class="stage-button ${stage.id === state.stage ? "active" : ""}" type="button" data-stage="${stage.id}">
+          <span class="stage-number">階段 ${stage.id}</span>
+          <span class="stage-range">${stage.range} 等</span>
+        </button>
+      `).join("");
+    }
 
-                const selectElement = document.getElementById("weaponType");
-                Object.keys(materials).forEach(function(weaponType) {
-                    const option = document.createElement("option");
-                    option.value = weaponType;
-                    option.textContent = weaponType;
-                    selectElement.appendChild(option);
-                });
-            } catch (error) {
-                showError("獲取武器資料失敗，請重新整理網頁。");
-            } finally {
-                hideLoading();
-            }
-        };
+    function getCurrentMaterials() {
+      return state.data[state.weapon]?.[state.rank]?.[state.stage] || [];
+    }
 
-        document.getElementById('weaponType').addEventListener('change', function(e) {
-            const rankSelect = document.getElementById('rank');
-            rankSelect.disabled = !e.target.value;
-            rankSelect.value = '';
-            hideStagesAndMaterials();
-        });
+    function renderMaterials() {
+      const materials = getCurrentMaterials();
+      const filtered = materials.filter((material) => material.name.includes(state.materialQuery));
+      const stage = stages.find((item) => item.id === state.stage);
+      $("#selectionTitle").textContent = state.weapon ? `${state.weapon} ${state.rank}級` : "請先選擇武器";
+      $("#selectionSubtitle").textContent = state.weapon ? `階段 ${state.stage}，開放等級 ${stage.range}。` : "材料會在這裡依照目前階段顯示。";
+      $("#materialCount").textContent = `${filtered.length} 項`;
+      $("#materialList").innerHTML = filtered.map((material, index) => `
+        <button class="material-item" type="button" data-copy="${material.name}" style="animation-delay: ${index * 35}ms" title="點擊複製道具名稱">
+          <div class="material-name">${material.name}</div>
+          <span class="amount">x${material.amount}</span>
+        </button>
+      `).join("") || '<div class="empty">目前條件沒有材料，或搜尋沒有結果。</div>';
+    }
 
-        document.getElementById('rank').addEventListener('change', function(e) {
-            if (e.target.value) {
-                showStages();
-                updateMaterials();
-            } else {
-                hideStagesAndMaterials();
-            }
-        });
+    function updateBadges() {
+      $("#currentBadge").textContent = state.weapon ? `${state.weapon} / ${state.rank} / 階段 ${state.stage}` : "尚未選擇";
+      $("#rankBadge").textContent = `Rank ${state.rank}`;
+    }
 
-        window.onclick = function(event) {
-            const modal = document.getElementById('expModal');
-            if (event.target == modal) {
-                closeExpModal();
-            }
-        }
+    function setWeapon(weapon) {
+      state.weapon = weapon;
+      state.materialQuery = "";
+      $("#materialSearch").value = "";
+      renderAll();
+    }
 
-        function showStages() {
-            const stagesContainer = document.getElementById('stagesContainer');
-            const stageButtons = document.getElementById('stageButtons');
-            stagesContainer.style.display = 'block';
-            stageButtons.innerHTML = '';
+    function calculateExp() {
+      const level = Number($("#currentLevel").value);
+      const currentExp = Number($("#currentExp").value) || 0;
+      if (!Number.isFinite(level) || level < 1 || level >= 49) {
+        $("#expResult").innerHTML = `
+          <div class="result-row"><span>提醒</span><strong>等級請輸入 1-48</strong></div>
+        `;
+        return;
+      }
 
-            stagesConfig.forEach(({stage, levels}) => {
-                const button = document.createElement('button');
-                button.className = `stage-button ${stage === currentStage ? 'active' : ''}`;
-                button.innerHTML = `
-                    <div class="stage-number">階段 ${stage}</div>
-                    <div class="stage-levels">${levels}等</div>
-                `;
-                button.onclick = () => {
-                    currentStage = stage;
-                    document.querySelectorAll('.stage-button').forEach(btn => 
-                        btn.classList.remove('active'));
-                    button.classList.add('active');
-                    updateMaterials();
-                };
-                stageButtons.appendChild(button);
-            });
-        }
+      const essenceTotal = Object.entries(essenceExp).reduce((total, [id, exp]) => {
+        return total + ((Number($(`#${id}`).value) || 0) * exp);
+      }, 0);
+      const totalOwnedExp = currentExp + essenceTotal;
+      const nextNeed = expRequirements[state.rank][level + 1];
+      const remaining = Math.max(nextNeed - totalOwnedExp, 0);
+      $("#expResult").innerHTML = `
+        <div class="result-row"><span>素材經驗加總</span><strong>${format(essenceTotal)}</strong></div>
+        <div class="result-row"><span>目前可用經驗</span><strong>${format(totalOwnedExp)}</strong></div>
+        <div class="result-row"><span>${level + 1} 等需求</span><strong>${format(nextNeed)}</strong></div>
+        <div class="result-row"><span>還需要</span><strong>${format(remaining)}</strong></div>
+      `;
+    }
 
-        function updateMaterials() {
-            const weaponType = document.getElementById('weaponType').value;
-            const rank = document.getElementById('rank').value;
-            const materialsContainer = document.getElementById('materialsContainer');
-            const materialsList = document.getElementById('materialsList');
-            const materialsTitle = document.getElementById('materialsTitle');
+    $("#weaponSearch").addEventListener("input", (event) => {
+      state.weaponQuery = event.target.value.trim();
+      renderWeaponList();
+    });
 
-            if (weaponType && rank) {
-                materialsContainer.style.display = 'block';
-                const currentMaterials = materials[weaponType]?.[rank]?.[currentStage] || [];
-                
-                materialsTitle.textContent = `${weaponType} ${rank}級 所需材料 (階段 ${currentStage} - ${stagesConfig[currentStage-1].levels}等)`;
-                
-                materialsList.innerHTML = '';
+    $("#themeToggle").addEventListener("click", () => {
+      applyTheme(document.body.classList.contains("dark-theme") ? "light" : "dark");
+    });
 
-                // Add exp calculation section with custom exp inputs
-                const expDiv = document.createElement('div');
-                expDiv.className = 'exp-calculation';
-                expDiv.innerHTML = `
-                    <div class="form-group">
-                        <label>目前等級 (1-49)</label>
-                        <input type="number" id="currentLevel" class="exp-input" min="1" max="49" value="">
-                    </div>
-                    <div class="form-group">
-                        <label>目前經驗值</label>
-                        <input type="number" id="currentExp" class="exp-input" min="0" value="">
-                    </div>
-                    <div class="exp-custom-input exp-3">
-                        <label>3開數量 (58,327經驗/個)</label>
-                        <input type="number" id="exp3" min="0" value="0">
-                    </div>
-                    <div class="exp-custom-input exp-2">
-                        <label>2開數量 (7,837經驗/個)</label>
-                        <input type="number" id="exp2" min="0" value="0">
-                    </div>
-                    <div class="exp-custom-input exp-1">
-                        <label>1開數量 (397經驗/個)</label>
-                        <input type="number" id="exp1" min="0" value="0">
-                    </div>
-                    <div class="exp-custom-input exp-0">
-                        <label>0開數量 (150經驗/個)</label>
-                        <input type="number" id="exp0" min="0" value="0">
-                    </div>
-                    <button class="exp-calculate-btn" id="calculateExp">計算經驗值</button>
-                `;
-                materialsList.appendChild(expDiv);
+    $("#materialSearch").addEventListener("input", (event) => {
+      state.materialQuery = event.target.value.trim();
+      renderMaterials();
+    });
 
-                // Add material items
-                currentMaterials.forEach((material, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'material-item';
-                    div.style.animationDelay = `${index * 0.15}s`;
-                    div.innerHTML = `
-                        <div class="material-name">
-                            <div class="material-dot"></div>
-                            <span>${material.name}</span>
-                        </div>
-                        <span class="material-amount">x${material.amount}</span>
-                    `;
-                    materialsList.appendChild(div);
-                });
+    $("#materialList").addEventListener("click", async (event) => {
+      const item = event.target.closest("[data-copy]");
+      if (!item) return;
+      const text = item.dataset.copy;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast(`已複製：${text}`);
+      } catch (error) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+        showToast(`已複製：${text}`);
+      }
+    });
 
-                // Setup exp calculation
-                document.getElementById('calculateExp').addEventListener('click', function() {
-                    const levelInput = document.getElementById('currentLevel');
-                    const expInput = document.getElementById('currentExp');
-                    const exp3Input = document.getElementById('exp3');
-                    const exp2Input = document.getElementById('exp2');
-                    const exp1Input = document.getElementById('exp1');
-                    const exp0Input = document.getElementById('exp0');
+    $("#weaponList").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-weapon]");
+      if (button) setWeapon(button.dataset.weapon);
+    });
 
-                    const currentLevel = parseInt(levelInput.value);
-                    let currentExp = parseInt(expInput.value) || 0;
-                    
-                    const exp3Count = parseInt(exp3Input.value) || 0;
-                    const exp2Count = parseInt(exp2Input.value) || 0;
-                    const exp1Count = parseInt(exp1Input.value) || 0;
-                    const exp0Count = parseInt(exp0Input.value) || 0;
+    $("#weaponSelect").addEventListener("change", (event) => {
+      setWeapon(event.target.value);
+    });
 
-                    if (!currentLevel) {
-                        showError('請輸入正確的等級');
-                        return;
-                    }
+    $("#rankTabs").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-rank]");
+      if (!button) return;
+      state.rank = button.dataset.rank;
+      renderAll();
+    });
 
-                    if (currentLevel >= 49) {
-                        showError('已達到最高等級');
-                        return;
-                    }
+    $("#stageTabs").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-stage]");
+      if (!button) return;
+      state.stage = button.dataset.stage;
+      renderAll();
+    });
 
-                    // 計算總經驗值
-                    const totalCustomExp = 
-                        (exp3Count * customExpValues["3開"]) +
-                        (exp2Count * customExpValues["2開"]) +
-                        (exp1Count * customExpValues["1開"]) +
-                        (exp0Count * customExpValues["0開"]);
+    $("#calculateExp").addEventListener("click", calculateExp);
 
-                    currentExp += totalCustomExp;
+    $("#resetExp").addEventListener("click", () => {
+      ["currentLevel", "currentExp", "exp3", "exp2", "exp1", "exp0"].forEach((id) => {
+        $(`#${id}`).value = id === "currentLevel" ? 1 : 0;
+      });
+      calculateExp();
+    });
 
-                    const nextLevelTotal = expRequirements[rank][currentLevel + 1];
-                    const currentLevelTotal = expRequirements[rank][currentLevel];
-                    const remaining = nextLevelTotal - currentExp;
+    ["currentLevel", "currentExp", "exp3", "exp2", "exp1", "exp0"].forEach((id) => {
+      $(`#${id}`).addEventListener("input", calculateExp);
+    });
 
-                    document.getElementById('currentLevelTotal').textContent = currentLevelTotal.toLocaleString();
-                    document.getElementById('nextLevel').textContent = currentLevel + 1;
-                    document.getElementById('nextLevelTotal').textContent = nextLevelTotal.toLocaleString();
-                    document.getElementById('remaining').textContent = (remaining > 0 ? remaining : 0).toLocaleString();
-
-                    // 更新模態框標題
-                    const modalTitle = document.querySelector('.modal-title');
-                    if (totalCustomExp > 0) {
-                        let expDetails = [];
-                        if (exp3Count > 0) expDetails.push(`3開x${exp3Count}`);
-                        if (exp2Count > 0) expDetails.push(`2開x${exp2Count}`);
-                        if (exp1Count > 0) expDetails.push(`1開x${exp1Count}`);
-                        if (exp0Count > 0) expDetails.push(`0開x${exp0Count}`);
-                        modalTitle.textContent = `經驗值計算結果 (${expDetails.join(', ')}: +${totalCustomExp.toLocaleString()})`;
-                    } else {
-                        modalTitle.textContent = '經驗值計算結果';
-                    }
-
-                    showExpModal();
-                });
-            }
-        }
-
-        function hideStagesAndMaterials() {
-            document.getElementById('stagesContainer').style.display = 'none';
-            document.getElementById('materialsContainer').style.display = 'none';
-            currentStage = 1;
-        }
-    </script>
+    applyTheme(localStorage.getItem(THEME_KEY) || "light");
+    loadData();
+  </script>
 </body>
-</html>                        
+</html>
